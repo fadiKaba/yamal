@@ -1,0 +1,36 @@
+.about-container{
+    background-image: url("/images/about.jpg")  ;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color:#000;
+    position: relative;
+    h3{
+        font-size: 3.5rem;
+        font-weight: 700;
+        text-transform: capitalize;
+        color: #308409;
+        span{
+            border-bottom: #308409 6px solid;
+        }
+    }
+    p{
+        font-weight: 400;
+        font-size: 1.3rem;
+    }
+    &::before{
+        content: '';
+        width:100%;
+        height: 100%;
+        position: absolute;
+        top:0;
+        left:0;
+        background-color: rgba(255, 255, 255, 0.89);
+    }
+    .photos{
+        text-align: center;
+        img{
+            border-radius: 50%;
+        }
+    }
+}
