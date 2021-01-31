@@ -5,9 +5,9 @@
                 <ul>
                     <li>YaMal Al Sham</li>
                     <li class="mt-2">
-                        <img class="scale" width="30px"  :src="'../iconic/facebook.png'" alt="FB"> 
-                        <img class="scale ml-2" width="30px"  :src="'../iconic/twitter.png'" alt="twitter"> 
-                        <img class="scale ml-2" width="30px"  :src="'../iconic/instagram.png'" alt="instagram"> 
+                        <img class="scale" width="30px"  :src="'/iconic/facebook.png'" alt="FB"> 
+                        <img class="scale ml-2" width="30px"  :src="'/iconic/twitter.png'" alt="twitter"> 
+                        <img class="scale ml-2" width="30px"  :src="'/iconic/instagram.png'" alt="instagram"> 
                     </li>
                     <li class="mt-2">
                         info@yamalalsham.com

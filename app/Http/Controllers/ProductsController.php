@@ -18,7 +18,7 @@ class ProductsController extends Controller
      */
     public function index()
     {
-        $products = Product::with('photo')->with('supplier')->paginate(2);
+        $products = Product::with('photo')->with('supplier')->orderBy('created_at','desc')->paginate(10);
         return $products;
     }
 
@@ -84,8 +84,9 @@ class ProductsController extends Controller
             }else{
                 $photo = $pho->orientate()->fit(600, 600)->save($path.$newName);
                 DB::commit();
+                return Product::where('id', $product->id)->with('photo')->with('supplier')->first();
             }
-            return 'Saved';
+            
         }catch(Exception $err){
             return $err->message;
         }
@@ -109,8 +110,9 @@ class ProductsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
-    {
-        //
+    {   
+        $product = Product::where('id', $id)->with('photo')->with('supplier')->first();
+        return  view('/product-edit')->with(compact('product'));
     }
 
     /**
@@ -132,7 +134,26 @@ class ProductsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
-    {
-        //
+    {   
+        $product = Product::findOrFail($id);
+        $photo = Photo::findOrFail($product->photo_id);
+        $Photo_url = $photo->photo_url;
+        try{
+            
+            DB::beginTransaction();
+            $dProduct = $product->delete();
+            $dPhoto = $photo->delete();
+            if(!$dProduct || !$dPhoto){
+                DB::rollBack();
+            }else{ 
+                File::delete(public_path('images/products/'.$Photo_url));
+                DB::commit();
+                return $id;
+            }  
+        }catch(Exception $err){
+            return 'internal error 500';
+        }
+        
+        
     }
 }

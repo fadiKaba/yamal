@@ -17,9 +17,14 @@
                     <form class="border p-1 p-md-5" id='fp' enctype="multipart/form-data">
                          <div class="form-group">
                              <label for="supplier_id">Supplier</label>
-                             <select v-model="supplier_id" class="form-control" id="supplier_id" name="supplier_id">
-                                 <option value="1">Baroudi</option>
-                             </select>
+                             <div class="d-flex">
+                                <select v-model="supplier_id" class="form-control" id="supplier_id" name="supplier_id">
+                                     <option disable>Select supplier</option>
+                                    <option value="1">Baroudi</option>
+                                </select>
+                                <a class="btn btn-primary ml-2" title="Add new supplier">+</a> 
+                             </div>
+                             
                              <small class="text-danger" v-if="validateErrors.supplier_id">{{validateErrors.supplier_id[0]}}</small>
                          </div>
                          <div class="form-group">
@@ -32,9 +37,13 @@
                              <input v-model="product_size" class="form-control" type="text" name="product_size" id="product_size">
                              <small class="text-danger" v-if="validateErrors.product_size">{{validateErrors.product_size[0]}}</small>
                          </div>
-                         <div class="form-group">
-                             <label for="product_price">Price</label>
+                         <label for="product_price">Price</label>
+                         <div class="input-group mb-3">
                              <input v-model="product_price" class="form-control" type="number" step="0.01" name="product_price" id="product_price">
+                             <div class="input-group-append">
+                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">0.00</span>
+                            </div>
                              <small class="text-danger" v-if="validateErrors.product_price">{{validateErrors.product_price[0]}}</small>
                          </div>
                          <div class="form-group">
@@ -42,31 +51,28 @@
                              <input class="form-control" type="file" name="product_photo" id="product_photo">
                              <small class="text-danger" v-if="validateErrors.product_photo">{{validateErrors.product_photo[0]}}</small>
                          </div>
-                         <div class="row">
-                             <div class="col-md-2">
-                                 <button @click.prevent="storeProduct()" type="submit" class="btn btn-success"><span id="save-p">Save</span> 
-                                     <div id="spin" class=" spinner-border spinner-border-sm d-none" role="status">
+                         <div>
+                            <button @click.prevent="storeProduct()" type="submit" class="btn btn-success"><span id="save-p">Save</span> 
+                                <div id="spin" class=" spinner-border spinner-border-sm d-none" role="status">
                                     <span class="sr-only">Loading...</span>
                                 </div>
-                                 </button>
-                             </div>
-                             <div class="col-md-1">
-                                 
-                             </div>
-                             <div class="col-md-9">
-                                  <div v-if="error != ''" class="col-md-10">
-                                    <div class="alert alert-danger">{{error}}</div>
-                                </div>          
-                             </div>
+                            </button>
                          </div>                   
                     </form>          
                 </div>
+                <div v-if="error != ''" class="col-md-10">
+                    <div class="alert alert-danger">{{error}}</div>
+                </div>  
+                <div v-if="success != ''" class="col-md-10">
+                    <div class="alert alert-success">{{success}}</div>
+                </div>
           </div>      
            <!-- end admin add product form -->
-
           <div class="row">
               <div v-for="prod in products" :key="prod.id" class="col-md-3 pb-2">
-                  <Product :info="prod"></Product>
+                  <transition name="component-fade" mode="out-in">
+                  <Product @success="del($event)" :info="prod" :admin="admin"></Product>
+                  </transition>
               </div>
           </div>
       </div>
@@ -85,11 +91,12 @@ export default {
     components: {Product, },
     data: function(){
         return{
-            supplier_id:'',
+            view:'Product',
+            supplier_id:'Select supplier',
             product_name:'',
             product_size:'',
             product_price:'',
-            product_image:'',
+            success:'',
             error:'',
             validateErrors:{},
             products:[],
@@ -102,24 +109,25 @@ export default {
         getProducts: function(page){
             axios.get(`/product/?page=${page}`)
             .then(response => {
-                console.log(response.data.data);
                 response.data.data.forEach(item => {
-                  let newProduct = this.createProductObject(
+                  let newProductn = this.createProductObject(
                       item.id, 
                       item.photo.photo_url, 
                       item.product_name, 
                       item.product_price, 
                       item.supplier.supplier_name,
                       item.product_size);
-                  this.products.push(newProduct);
-                });
+                  this.products.push(newProductn);    
+                }); 
             }).catch(err => {
-                if(err.response){     
-                    this.error=err.response.data.message;
+                if(err.response){
+                    if(err.response.data){
+                       this.error=err.response.data.message; 
+                    }        
+                    this.success = '';
                 }else{
-                    console.log(err);
-                }
-              
+                    this.error = 'Somthing went wrong';
+                } 
             });   
         },
         storeProduct: function(){
@@ -132,20 +140,36 @@ export default {
             let data = new FormData(form);
             axios.post('/product', data)
             .then(response =>{
-                console.log(response);
+                let pr = response.data;
+                this.products.unshift(
+                    this.createProductObject(
+                        pr.id,
+                        pr.photo.photo_url, 
+                        pr.product_name, 
+                        pr.product_price, 
+                        pr.supplier.supplier_name, 
+                        pr.product_size)
+                );
                 this.error = '';
                 this.validateErrors = {};
                 saveP.classList.remove('d-none');
                 spinner.classList.add('d-none');
+                this.supplier_id = 'Select supplier';
+                this.product_size = '';
+                this.product_price = '';
+                this.product_name = '';
+                this.success = 'Saved successfully';
             })
             .catch(er =>{
-                if(er.response.data.errors){
+                if(er.response){
+                    this.success = '';
+                    if(er.response.data.errors){
                     this.validateErrors = er.response.data.errors;
-                }else if(er.response.data.message){
-                    this.error=er.response.data.message;
-                    this.validateErrors = {};
-                    this.error = 'Somthing went wrong';
-                }       
+                    }else if(er.response.data.message){
+                        this.validateErrors = {};
+                        this.error = 'Somthing went wrong';
+                    }  
+                } 
                 spinner.classList.add('d-none');
                 saveP.classList.remove('d-none');
             });         
@@ -160,6 +184,16 @@ export default {
                  product_size: size   
              };
              return product;
+        },
+        del: function(e){
+            this.success = 'Deleted';
+            let ind = this.products.findIndex(item => item.id == e.data);
+            this.products.splice(ind, 1);
+            this.error = '';
+            this.validateErrors = [];
+        },
+        getSuppliers: function(){
+            axios.get('')
         }
     }
 
