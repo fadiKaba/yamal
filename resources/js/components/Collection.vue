@@ -18,37 +18,37 @@
                          <div class="form-group">
                              <label for="supplier_id">Supplier</label>
                              <div class="d-flex">
-                                <select v-model="supplier_id" class="form-control" id="supplier_id" name="supplier_id">
-                                     <option disable>Select supplier</option>
-                                    <option value="1">Baroudi</option>
+                                <select required v-model="supplier_id" class="form-control" id="supplier_id" name="supplier_id">
+                                     <option disable >Select supplier</option>
+                                     <option v-for="sup in suppliers" :key="sup.id" value="sup.id">{{sup.supplier_name}}</option>
                                 </select>
-                                <a class="btn btn-primary ml-2" title="Add new supplier">+</a> 
+                                <a href="/supplier" class="btn btn-primary ml-2" title="Add new supplier">+</a> 
                              </div>
                              
                              <small class="text-danger" v-if="validateErrors.supplier_id">{{validateErrors.supplier_id[0]}}</small>
                          </div>
                          <div class="form-group">
                              <label for="product_name">Product Name</label>
-                             <input v-model="product_name" class="form-control" type="text" name="product_name" id="product_name">
+                             <input required v-model="product_name" class="form-control" type="text" name="product_name" id="product_name">
                              <small class="text-danger" v-if="validateErrors.product_name">{{validateErrors.product_name[0]}}</small>
                          </div>
                          <div class="form-group">
                              <label for="product_size">Size</label>
-                             <input v-model="product_size" class="form-control" type="text" name="product_size" id="product_size">
+                             <input required v-model="product_size" class="form-control" type="text" name="product_size" id="product_size">
                              <small class="text-danger" v-if="validateErrors.product_size">{{validateErrors.product_size[0]}}</small>
                          </div>
                          <label for="product_price">Price</label>
-                         <div class="input-group mb-3">
-                             <input v-model="product_price" class="form-control" type="number" step="0.01" name="product_price" id="product_price">
+                         <div class="input-group">
+                             <input required v-model="product_price" class="form-control" type="number" step="0.01" name="product_price" id="product_price">
                              <div class="input-group-append">
                                 <span class="input-group-text">$</span>
                                 <span class="input-group-text">0.00</span>
                             </div>
-                             <small class="text-danger" v-if="validateErrors.product_price">{{validateErrors.product_price[0]}}</small>
                          </div>
-                         <div class="form-group">
+                         <small class="text-danger" v-if="validateErrors.product_price">{{validateErrors.product_price[0]}}</small>
+                         <div class="form-group mt-3">
                              <label for="product_photo">Image</label>
-                             <input class="form-control" type="file" name="product_photo" id="product_photo">
+                             <input required class="form-control" type="file" name="product_photo" id="product_photo">
                              <small class="text-danger" v-if="validateErrors.product_photo">{{validateErrors.product_photo[0]}}</small>
                          </div>
                          <div>
@@ -91,6 +91,7 @@ export default {
     components: {Product, },
     data: function(){
         return{
+            suppliers: [],
             view:'Product',
             supplier_id:'Select supplier',
             product_name:'',
@@ -104,6 +105,7 @@ export default {
     },
     mounted: function(){
        this.getProducts(1);
+       this.getSuppliers();
     },
     methods:{
         getProducts: function(page){
@@ -193,7 +195,15 @@ export default {
             this.validateErrors = [];
         },
         getSuppliers: function(){
-            axios.get('')
+            axios.get('/sups')
+            .then(response => {
+                this.suppliers = response.data;
+               // console.log(response);
+            }).catch(err => {
+                if(err.response){
+                    this.error = err.response.data.message;
+                }
+            });
         }
     }
 
