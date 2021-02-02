@@ -7,6 +7,7 @@
         
         <Cover></Cover>
         <Collection></Collection>
+        <Videos @if(Auth::check()) :admin="true" @else :admin="false" @endif></Videos>
     </div>
 </div>
 

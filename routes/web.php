@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Controllers\VideosController;
 
 Route::get('/admin', function () {
     return view('admin/admin');
@@ -31,5 +32,6 @@ Route::group(['middleware', AdminMiddleware::class], function(){
     Route::resource('/product', ProductsController::class);
     Route::resource('/supplier', SuppliersController::class);
     Route::get('/sups', [SuppliersController::class, 'sendSuppliers']);
+    Route::resource('/video', VideosController::class);
 });
 

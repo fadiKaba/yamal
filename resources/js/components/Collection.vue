@@ -20,7 +20,7 @@
                              <div class="d-flex">
                                 <select required v-model="supplier_id" class="form-control" id="supplier_id" name="supplier_id">
                                      <option disable >Select supplier</option>
-                                     <option v-for="sup in suppliers" :key="sup.id" value="sup.id">{{sup.supplier_name}}</option>
+                                     <option v-for="sup in suppliers" :key="sup.id" :value="sup.id">{{sup.supplier_name}}</option>
                                 </select>
                                 <a href="/supplier" class="btn btn-primary ml-2" title="Add new supplier">+</a> 
                              </div>

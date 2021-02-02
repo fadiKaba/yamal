@@ -97,8 +97,10 @@ class SuppliersController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
-    {
-        //
+    {   
+        $supplier = Supplier::findOrFail($id);
+        $supplier->delete();
+        return redirect()->back()->with('success', 'Deleted succsessfully');
     }
 
     public function sendSuppliers(){

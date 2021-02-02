@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Photo;
+use App\Models\Supplier;
 use Image;
 use DB;
 use File;
@@ -45,7 +46,7 @@ class ProductsController extends Controller
             'product_name' => 'required|max:255',
             'product_size' => 'required|max:255',
             'product_price' => 'required|numeric',
-            'product_photo' => 'required'
+            'product_photo' => 'required|image'
         ]);
         
         try{
@@ -55,9 +56,8 @@ class ProductsController extends Controller
             $photoRealPath = $file->getRealPath();
             $originalName = $file->getClientOriginalName();
             $fileName = pathinfo($originalName, PATHINFO_FILENAME);
-            $extension = $file->extension();
             
-            $newName = uniqid().$fileName.'.'.$extension;
+            $newName = uniqid().$fileName.'.jpg';
             $path = public_path('images/products/');
            
             $pho = Image::make($photoRealPath);
@@ -82,7 +82,7 @@ class ProductsController extends Controller
             if(!$createdPhoto || !$product){
                 DB::rollBack();
             }else{
-                $photo = $pho->orientate()->fit(600, 600)->save($path.$newName);
+                $photo = $pho->orientate()->fit(600, 600)->save($path.$newName, 80, 'jpg');
                 DB::commit();
                 return Product::where('id', $product->id)->with('photo')->with('supplier')->first();
             }
@@ -112,7 +112,8 @@ class ProductsController extends Controller
     public function edit($id)
     {   
         $product = Product::where('id', $id)->with('photo')->with('supplier')->first();
-        return  view('/product-edit')->with(compact('product'));
+        $suppliers = Supplier::all();
+        return  view('/product-edit')->with(compact('product', 'suppliers'));
     }
 
     /**
@@ -123,8 +124,66 @@ class ProductsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
-        //
+    {   
+        $request->validate([
+            'supplier_id' => 'required|integer',
+            'product_name' => 'required|max:255',
+            'product_size' => 'required|max:255',
+            'product_price' => 'required|numeric',
+            'product_photo' => 'image'
+        ]);
+        
+            $product = Product::findOrFail($id);
+            # Uploading the image using Image Intervention
+        
+            $file = $request->file('product_photo');
+           
+            if($file != null){
+                $photoRealPath = $file->getRealPath();
+                $originalName = $file->getClientOriginalName();
+                $fileName = pathinfo($originalName, PATHINFO_FILENAME);
+                
+                $newName = uniqid().$fileName.'.jpg';
+                $path = public_path('images/products/');
+                try{
+                    $pho = Image::make($photoRealPath);
+
+                    # Start transaction
+                    DB::beginTransaction();
+                    File::delete($path.$product->photo->photo_url);
+                    $createdPhoto = Photo::create([
+                        'photo_url' => $newName 
+                    ]);
+                    
+                    $product->update([
+                        'supplier_id' => $request->supplier_id,
+                        'product_name' => $request->product_name,
+                        'product_size' => $request->product_size,
+                        'product_price' => $request->product_price,
+                        'photo_id' => $createdPhoto->id,
+                    ]);
+                    
+                    if(!$createdPhoto || !$product){
+                        DB::rollBack();
+                    }else{
+                        $photo = $pho->orientate()->fit(600, 600)->save($path.$newName, 80, 'jpg');
+                        DB::commit();
+                        return redirect()->back()->with('success', 'Updated successfully');
+                        # end Uploading the image using Image Intervention
+                    }
+                
+                }catch(Exception $err){
+                    return $err->message;
+                }       
+            }else{
+                $product->update([
+                    'supplier_id' => $request->supplier_id,
+                    'product_name' => $request->product_name,
+                    'product_size' => $request->product_size,
+                    'product_price' => $request->product_price,
+                ]);
+                return redirect()->back()->with('success', 'Updated successfully');
+            }     
     }
 
     /**

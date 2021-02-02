@@ -30,7 +30,9 @@
                 <td>{{$supplier->supplier_name}}</td>
                 <td class="d-flex">
                     <a class="btn btn-link mr-2" href="/supplier/{{$supplier->id}}/edit">Edit</a>
-                    <form action="" onsubmit="return confirm('Delete {{$supplier->supplier_name}} ?')">
+                    <form action="/supplier/{{$supplier->id}}" onsubmit="return confirm('Delete {{$supplier->supplier_name}} ?')" method="post">
+                        @method('delete')
+                        @csrf
                         <button  class="btn btn-link text-danger" type="submit">Delete</button>
                     </form>
                 </td>
